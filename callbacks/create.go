@@ -152,6 +152,10 @@ func CreateWithReturning(db *gorm.DB) {
 
 						for rows.Next() {
 						BEGIN:
+							if int(db.RowsAffected) >= db.Statement.ReflectValue.Len() {
+								return
+							}
+
 							reflectValue := db.Statement.ReflectValue.Index(int(db.RowsAffected))
 							if reflect.Indirect(reflectValue).Kind() != reflect.Struct {
 								break
@@ -162,10 +166,6 @@ func CreateWithReturning(db *gorm.DB) {
 
 								if onConflict.DoNothing && !fieldValue.IsZero() {
 									db.RowsAffected++
-
-									if int(db.RowsAffected) >= db.Statement.ReflectValue.Len() {
-										return
-									}
 
 									goto BEGIN
 								}
